@@ -16,7 +16,7 @@ type TableDataHandler interface {
 }
 type TuizFieldz interface {
 	InputType() string
-	Inputs() []TuizInputz
+	Inputs() []interface{}
 }
 type TuizInputz interface {
 	Placeholder() string
