@@ -165,8 +165,8 @@ func kbxDepsMax(a, b int) int {
 	return b
 }
 
-// InstallDepsWithUI installs dependencies in a terminal UI with a progress bar
-func InstallDepsWithUI(args ...string) error {
+// InstallDependenciesWithUI installs dependencies in a terminal UI with a progress bar
+func InstallDependenciesWithUI(args ...string) error {
 	if len(args) < 4 {
 		_ = logz.Log("error", "missing arguments", "pkgz")
 		return nil
