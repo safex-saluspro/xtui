@@ -3,9 +3,9 @@ package cli
 import "github.com/spf13/cobra"
 
 func FormsCmdsList() []*cobra.Command {
-	inputCmd := inputsFormCmd()
-	loaderCmd := loaderFormCmd()
-	splitCmd := splitFormCmd()
+	inputCmd := InputFormCommand()
+	loaderCmd := LoaderFormCommand()
+	splitCmd := SplitFormCommand()
 
 	return []*cobra.Command{
 		inputCmd,
@@ -14,7 +14,7 @@ func FormsCmdsList() []*cobra.Command {
 	}
 }
 
-func inputsFormCmd() *cobra.Command {
+func InputFormCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "input-form",
 		Aliases: []string{"input", "formInput", "inputForm", "formInput", "form-input"},
@@ -28,7 +28,7 @@ func inputsFormCmd() *cobra.Command {
 	return cmd
 }
 
-func loaderFormCmd() *cobra.Command {
+func LoaderFormCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "loader-form",
 		Aliases: []string{"loader", "formLoader", "loaderForm", "formLoader", "form-loader"},
@@ -42,7 +42,7 @@ func loaderFormCmd() *cobra.Command {
 	return cmd
 }
 
-func splitFormCmd() *cobra.Command {
+func SplitFormCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "split-form",
 		Aliases: []string{"splitInput", "splitInputForm", "inputSplit", "inputSplitForm", "split-input-form"},

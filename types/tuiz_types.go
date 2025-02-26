@@ -14,6 +14,23 @@ type TableDataHandler interface {
 	GetHeaders() []string
 	GetRows() [][]string
 }
+
+type Field interface {
+	Type() string
+	Value() string
+	Placeholder() string
+	ValidationRules() []ValidationRule
+}
+
+type ValidationRule interface {
+	Validate(value string) error
+}
+
+type FormConfig struct {
+	Title  string
+	Fields []Field
+}
+
 type TuizFieldz interface {
 	InputType() string
 	Inputs() []interface{}

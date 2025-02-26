@@ -9,12 +9,12 @@ import (
 )
 
 func AppsCmdsList() []*cobra.Command {
-	instAppsCmd := InstallAppsCmd()
+	instAppsCmd := InstallApplicationsCommand()
 
 	return []*cobra.Command{instAppsCmd}
 }
 
-func InstallAppsCmd() *cobra.Command {
+func InstallApplicationsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "app-install",
 		Aliases: []string{"install", "appInstall", "installApp", "aptInstall", "apt-install", "depInstall", "dep-install"},
@@ -30,7 +30,7 @@ func InstallAppsCmd() *cobra.Command {
 			newArgs := []string{strings.Join(depList, " "), path, fmt.Sprintf("%t", yes), fmt.Sprintf("%t", quiet)}
 			args = append(args, newArgs...)
 
-			return InstallDepsWithUI(args...)
+			return InstallDependenciesWithUI(args...)
 		},
 	}
 

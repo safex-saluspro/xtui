@@ -5,12 +5,12 @@ import (
 )
 
 func ServicesCmds() []*cobra.Command {
-	runAsDaemon := runAsDaemonCmd()
+	runAsDaemon := RunAsDaemonCommand()
 
 	return []*cobra.Command{runAsDaemon}
 }
 
-func runAsDaemonCmd() *cobra.Command {
+func RunAsDaemonCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "daemonize",
 		Aliases: []string{"daemon", "runDaemon", "run-daemon", "runAsDaemon"},
