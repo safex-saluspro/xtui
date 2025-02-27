@@ -179,6 +179,14 @@ func InstallDependenciesWithUI(args ...string) error {
 	path := args[1]
 	yes := args[2] == "true"
 	quiet := args[3] == "true"
+
+	// Dynamic adaptation logic
+	availableProperties := getAvailableProperties()
+	if len(availableProperties) > 0 {
+		adaptedArgs := adaptArgsToProperties(args, availableProperties)
+		return installDependenciesWithUI(adaptedArgs...)
+	}
+
 	model := KbxDepsNewModel(apps, path, yes, quiet)
 	p := tea.NewProgram(&model)
 	_, err := p.Run()
@@ -188,4 +196,23 @@ func InstallDependenciesWithUI(args ...string) error {
 		return nil
 	}
 	return nil
+}
+
+// Helper function to get available properties
+func getAvailableProperties() map[string]string {
+	// Implement logic to fetch available properties
+	return map[string]string{
+		"property1": "value1",
+		"property2": "value2",
+	}
+}
+
+// Helper function to adapt arguments based on available properties
+func adaptArgsToProperties(args []string, properties map[string]string) []string {
+	// Implement logic to adapt arguments based on properties
+	adaptedArgs := args
+	for key, value := range properties {
+		adaptedArgs = append(adaptedArgs, fmt.Sprintf("--%s=%s", key, value))
+	}
+	return adaptedArgs
 }
