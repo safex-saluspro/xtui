@@ -7,7 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"github.com/faelmori/kbx/mods/logz"
+	"github.com/faelmori/logz"
 	. "github.com/faelmori/xtui/types"
 	"os"
 	"sort"

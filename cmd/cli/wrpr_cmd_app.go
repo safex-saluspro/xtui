@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/faelmori/kbx/mods/logz"
+	"github.com/faelmori/logz"
 	. "github.com/faelmori/xtui/wrappers"
 	"github.com/spf13/cobra"
 	"strings"

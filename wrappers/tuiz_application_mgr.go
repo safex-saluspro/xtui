@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/faelmori/kbx/mods/logz"
+	"github.com/faelmori/logz"
 	"os/exec"
 	"strings"
 )

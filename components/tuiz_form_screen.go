@@ -2,7 +2,7 @@ package components
 
 import (
 	"fmt"
-	"github.com/faelmori/kbx/mods/logz"
+	"github.com/faelmori/logz"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"

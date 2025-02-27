@@ -3,7 +3,7 @@ package wrappers
 import (
 	"bufio"
 	"fmt"
-	"github.com/faelmori/kbx/mods/logz"
+	"github.com/faelmori/logz"
 
 	"os"
 	"os/exec"
