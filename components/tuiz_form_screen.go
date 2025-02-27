@@ -43,6 +43,12 @@ func kbdzInputsInitialModel(config TuizConfigz) FormScreenModel {
 		inputs = append(inputs, field.(TuizInput))
 	}
 
+	// Dynamic adaptation logic
+	availableProperties := getAvailableProperties()
+	if len(availableProperties) > 0 {
+		inputs = adaptInputsToProperties(inputs, availableProperties)
+	}
+
 	m := FormScreenModel{
 		Title:        cfg.Title(),
 		FocusIndex:   0,
@@ -231,4 +237,32 @@ func (m *FormScreenModel) updateInputs(msg tea.Msg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+// Helper function to get available properties
+func getAvailableProperties() map[string]string {
+	// Implement logic to fetch available properties
+	return map[string]string{
+		"property1": "value1",
+		"property2": "value2",
+	}
+}
+
+// Helper function to adapt inputs based on available properties
+func adaptInputsToProperties(inputs []TuizInput, properties map[string]string) []TuizInput {
+	// Implement logic to adapt inputs based on properties
+	adaptedInputs := inputs
+	for key, value := range properties {
+		adaptedInputs = append(adaptedInputs, TuizInput{
+			Ph:  key,
+			Tp:  "text",
+			Val: value,
+			Req: false,
+			Min: 0,
+			Max: 100,
+			Err: "",
+			Vld: func(value string) error { return nil },
+		})
+	}
+	return adaptedInputs
 }

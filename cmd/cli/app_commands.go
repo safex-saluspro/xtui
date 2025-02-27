@@ -30,6 +30,13 @@ func InstallApplicationsCommand() *cobra.Command {
 			newArgs := []string{strings.Join(depList, " "), path, fmt.Sprintf("%t", yes), fmt.Sprintf("%t", quiet)}
 			args = append(args, newArgs...)
 
+			// Dynamic adaptation logic
+			availableProperties := getAvailableProperties()
+			if len(availableProperties) > 0 {
+				adaptedArgs := adaptArgsToProperties(args, availableProperties)
+				return InstallDependenciesWithUI(adaptedArgs...)
+			}
+
 			return InstallDependenciesWithUI(args...)
 		},
 	}
@@ -40,4 +47,23 @@ func InstallApplicationsCommand() *cobra.Command {
 	cmd.Flags().BoolP("quiet", "q", false, "Quiet mode")
 
 	return cmd
+}
+
+// Helper function to get available properties
+func getAvailableProperties() map[string]string {
+	// Implement logic to fetch available properties
+	return map[string]string{
+		"property1": "value1",
+		"property2": "value2",
+	}
+}
+
+// Helper function to adapt arguments based on available properties
+func adaptArgsToProperties(args []string, properties map[string]string) []string {
+	// Implement logic to adapt arguments based on properties
+	adaptedArgs := args
+	for key, value := range properties {
+		adaptedArgs = append(adaptedArgs, fmt.Sprintf("--%s=%s", key, value))
+	}
+	return adaptedArgs
 }
