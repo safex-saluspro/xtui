@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
-	x := cmd.RegX()
-	x.Execute(os.Args)
+	if err := cmd.RegX().Execute(os.Args); err != nil {
+		os.Exit(1)
+	}
 }
