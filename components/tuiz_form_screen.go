@@ -27,7 +27,7 @@ var (
 
 var inputResult map[string]string
 
-type KbdzModel struct {
+type FormScreenModel struct {
 	Title        string
 	FocusIndex   int
 	Inputs       []textinput.Model
@@ -36,14 +36,20 @@ type KbdzModel struct {
 	ErrorMessage string
 }
 
-func kbdzInputsInitialModel(config TuizConfigz) KbdzModel {
+func kbdzInputsInitialModel(config TuizConfigz) FormScreenModel {
 	cfg := config
 	var inputs []TuizInput
 	for _, field := range cfg.Fds.Inputs() {
 		inputs = append(inputs, field.(TuizInput))
 	}
 
-	m := KbdzModel{
+	// Dynamic adaptation logic
+	availableProperties := getAvailableProperties()
+	if len(availableProperties) > 0 {
+		inputs = adaptInputsToProperties(inputs, availableProperties)
+	}
+
+	m := FormScreenModel{
 		Title:        cfg.Title(),
 		FocusIndex:   0,
 		CursorMode:   cursor.CursorBlink,
@@ -77,11 +83,11 @@ func kbdzInputsInitialModel(config TuizConfigz) KbdzModel {
 	return m
 }
 
-func (m *KbdzModel) Init() tea.Cmd {
+func (m *FormScreenModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *KbdzModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *FormScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -139,7 +145,7 @@ func (m *KbdzModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *KbdzModel) View() string {
+func (m *FormScreenModel) View() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("\n%s\n\n", m.Title))
@@ -169,7 +175,7 @@ func (m *KbdzModel) View() string {
 	return b.String()
 }
 
-func (m *KbdzModel) submit() tea.Cmd {
+func (m *FormScreenModel) submit() tea.Cmd {
 	for i, input := range m.Inputs {
 		value := input.Value()
 		field := m.Fields[i]
@@ -223,7 +229,7 @@ func KbdzInputs(config TuizConfig) (map[string]string, error) {
 	return inputResult, nil
 }
 
-func (m *KbdzModel) updateInputs(msg tea.Msg) tea.Cmd {
+func (m *FormScreenModel) updateInputs(msg tea.Msg) tea.Cmd {
 	cmds := make([]tea.Cmd, len(m.Inputs))
 
 	for i := range m.Inputs {
@@ -231,4 +237,32 @@ func (m *KbdzModel) updateInputs(msg tea.Msg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+// Helper function to get available properties
+func getAvailableProperties() map[string]string {
+	// Implement logic to fetch available properties
+	return map[string]string{
+		"property1": "value1",
+		"property2": "value2",
+	}
+}
+
+// Helper function to adapt inputs based on available properties
+func adaptInputsToProperties(inputs []TuizInput, properties map[string]string) []TuizInput {
+	// Implement logic to adapt inputs based on properties
+	adaptedInputs := inputs
+	for key, value := range properties {
+		adaptedInputs = append(adaptedInputs, TuizInput{
+			Ph:  key,
+			Tp:  "text",
+			Val: value,
+			Req: false,
+			Min: 0,
+			Max: 100,
+			Err: "",
+			Vld: func(value string) error { return nil },
+		})
+	}
+	return adaptedInputs
 }

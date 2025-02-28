@@ -2,6 +2,8 @@ package components
 
 import (
 	"encoding/csv"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/atotto/clipboard"
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,9 +15,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"gopkg.in/yaml.v2"
 )
 
-type KuizTableModel struct {
+type TableRenderer struct {
+	config       FormConfig
 	kTb          *table.Table
 	headers      []string
 	rows         [][]string
@@ -30,7 +34,13 @@ type KuizTableModel struct {
 	showHelp     bool
 }
 
-func NewKuizTableModel(headers []string, rows [][]string, customStyles map[string]lipgloss.Color) *KuizTableModel {
+func NewTableRenderer(config FormConfig, customStyles map[string]lipgloss.Color) *TableRenderer {
+	headers := make([]string, len(config.Fields))
+	for i, field := range config.Fields {
+		headers[i] = field.Placeholder()
+	}
+
+	rows := make([][]string, 0)
 	re := lipgloss.NewRenderer(os.Stdout)
 	baseStyle := re.NewStyle().Padding(0, 1)
 	headerStyle := baseStyle.Foreground(lipgloss.Color("252")).Bold(true)
@@ -98,7 +108,8 @@ func NewKuizTableModel(headers []string, rows [][]string, customStyles map[strin
 		pageSizeLimit = 20
 	}
 
-	return &KuizTableModel{
+	return &TableRenderer{
+		config:       config,
 		kTb:          t,
 		headers:      headers,
 		rows:         rows,
@@ -113,11 +124,11 @@ func NewKuizTableModel(headers []string, rows [][]string, customStyles map[strin
 	}
 }
 
-func (k *KuizTableModel) Init() tea.Cmd {
+func (k *TableRenderer) Init() tea.Cmd {
 	return nil
 }
 
-func (k *KuizTableModel) RowsNavigate(direction string) error {
+func (k *TableRenderer) RowsNavigate(direction string) error {
 	if direction == "down" {
 		k.selectedRow++
 	} else {
@@ -153,7 +164,7 @@ func (k *KuizTableModel) RowsNavigate(direction string) error {
 	return nil
 }
 
-func (k *KuizTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (k *TableRenderer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch message := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -195,6 +206,12 @@ func (k *KuizTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			k.ExportToCSV("exported_data.csv")
 		case "ctrl+h":
 			k.showHelp = !k.showHelp
+		case "ctrl+y":
+			k.ExportToYAML("exported_data.yaml")
+		case "ctrl+j":
+			k.ExportToJSON("exported_data.json")
+		case "ctrl+x":
+			k.ExportToXML("exported_data.xml")
 		default:
 			k.filter += message.String()
 		}
@@ -204,7 +221,7 @@ func (k *KuizTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return k, cmd
 }
 
-func (k *KuizTableModel) ApplyFilter() {
+func (k *TableRenderer) ApplyFilter() {
 	if k.filter == "" {
 		k.filteredRows = k.rows
 	} else {
@@ -222,7 +239,7 @@ func (k *KuizTableModel) ApplyFilter() {
 	k.kTb = k.kTb.Rows(k.GetCurrentPageRows()...)
 }
 
-func (k *KuizTableModel) SortRows() {
+func (k *TableRenderer) SortRows() {
 	sort.SliceStable(k.filteredRows, func(i, j int) bool {
 		if k.sortAsc {
 			return k.filteredRows[i][k.sortColumn] < k.filteredRows[j][k.sortColumn]
@@ -232,7 +249,7 @@ func (k *KuizTableModel) SortRows() {
 	k.kTb = k.kTb.Rows(k.GetCurrentPageRows()...)
 }
 
-func (k *KuizTableModel) GetCurrentPageRows() [][]string {
+func (k *TableRenderer) GetCurrentPageRows() [][]string {
 	start := k.page * k.pageSize
 	end := start + k.pageSize
 	if end > len(k.filteredRows) {
@@ -241,7 +258,7 @@ func (k *KuizTableModel) GetCurrentPageRows() [][]string {
 	return k.filteredRows[start:end]
 }
 
-func (k *KuizTableModel) View() string {
+func (k *TableRenderer) View() string {
 	helpText := "\nAtalhos:\n" +
 		"  - q, ctrl+c: Sair\n" +
 		"  - enter: Copiar linha selecionada para o clipboard\n" +
@@ -252,7 +269,10 @@ func (k *KuizTableModel) View() string {
 		"  - left: Página anterior\n" +
 		"  - down: Selecionar próxima linha\n" +
 		"  - up: Selecionar linha anterior\n" +
-		"  - ctrl+e: Exportar para CSV\n"
+		"  - ctrl+e: Exportar para CSV\n" +
+		"  - ctrl+y: Exportar para YAML\n" +
+		"  - ctrl+j: Exportar para JSON\n" +
+		"  - ctrl+x: Exportar para XML\n"
 
 	toggleHelpText := "\nPressione ctrl+h para exibir/ocultar os atalhos."
 
@@ -262,7 +282,7 @@ func (k *KuizTableModel) View() string {
 	return fmt.Sprintf("\nFilter: %s\n\n%s\nPage: %d/%d\n%s", k.filter, k.kTb.String(), k.page+1, (len(k.filteredRows)+k.pageSize-1)/k.pageSize, toggleHelpText)
 }
 
-func (k *KuizTableModel) ExportToCSV(filename string) {
+func (k *TableRenderer) ExportToCSV(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
 		_ = logz.Log("error", "Error creating file: "+err.Error())
@@ -290,17 +310,93 @@ func (k *KuizTableModel) ExportToCSV(filename string) {
 	_ = logz.Log("info", "Data exported to CSV: "+filename)
 }
 
-func GetTableScreen(handler TableDataHandler, customStyles map[string]lipgloss.Color) string {
-	headers := handler.GetHeaders()
-	rows := handler.GetRows()
-	k := NewKuizTableModel(headers, rows, customStyles)
+func (k *TableRenderer) ExportToYAML(filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		_ = logz.Log("error", "Error creating file: "+err.Error())
+		return
+	}
+	defer file.Close()
+
+	data := make([]map[string]string, len(k.filteredRows))
+	for i, row := range k.filteredRows {
+		rowData := make(map[string]string)
+		for j, cell := range row {
+			rowData[k.headers[j]] = cell
+		}
+		data[i] = rowData
+	}
+
+	encoder := yaml.NewEncoder(file)
+	defer encoder.Close()
+
+	if err := encoder.Encode(data); err != nil {
+		_ = logz.Log("error", "Error writing data to YAML: "+err.Error())
+		return
+	}
+
+	_ = logz.Log("info", "Data exported to YAML: "+filename)
+}
+
+func (k *TableRenderer) ExportToJSON(filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		_ = logz.Log("error", "Error creating file: "+err.Error())
+		return
+	}
+	defer file.Close()
+
+	data := make([]map[string]string, len(k.filteredRows))
+	for i, row := range k.filteredRows {
+		rowData := make(map[string]string)
+		for j, cell := range row {
+			rowData[k.headers[j]] = cell
+		}
+		data[i] = rowData
+	}
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(data); err != nil {
+		_ = logz.Log("error", "Error writing data to JSON: "+err.Error())
+		return
+	}
+
+	_ = logz.Log("info", "Data exported to JSON: "+filename)
+}
+
+func (k *TableRenderer) ExportToXML(filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		_ = logz.Log("error", "Error creating file: "+err.Error())
+		return
+	}
+	defer file.Close()
+
+	data := make([]map[string]string, len(k.filteredRows))
+	for i, row := range k.filteredRows {
+		rowData := make(map[string]string)
+		for j, cell := range row {
+			rowData[k.headers[j]] = cell
+		}
+		data[i] = rowData
+	}
+
+	encoder := xml.NewEncoder(file)
+	if err := encoder.Encode(data); err != nil {
+		_ = logz.Log("error", "Error writing data to XML: "+err.Error())
+		return
+	}
+
+	_ = logz.Log("info", "Data exported to XML: "+filename)
+}
+
+func GetTableScreen(config FormConfig, customStyles map[string]lipgloss.Color) string {
+	k := NewTableRenderer(config, customStyles)
 	return k.View()
 }
 
-func StartTableScreen(handler TableDataHandler, customStyles map[string]lipgloss.Color) error {
-	headers := handler.GetHeaders()
-	rows := handler.GetRows()
-	k := NewKuizTableModel(headers, rows, customStyles)
+func StartTableScreen(config FormConfig, customStyles map[string]lipgloss.Color) error {
+	k := NewTableRenderer(config, customStyles)
 
 	p := tea.NewProgram(k, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
