@@ -11,11 +11,11 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/faelmori/logz"
 	. "github.com/faelmori/xtui/types"
+	"gopkg.in/yaml.v2"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"gopkg.in/yaml.v2"
 )
 
 type TableRenderer struct {
@@ -285,38 +285,60 @@ func (k *TableRenderer) View() string {
 func (k *TableRenderer) ExportToCSV(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		_ = logz.Log("error", "Error creating file: "+err.Error())
+		logz.Error("Error creating file: "+err.Error(), map[string]interface{}{
+			"context":  "ExportToCSV",
+			"filename": filename,
+		})
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
 	// Write headers
 	if writerErr := writer.Write(k.headers); writerErr != nil {
-		_ = logz.Log("error", "Error writing headers to CSV: "+writerErr.Error())
+		logz.Error("Error writing headers to CSV.", map[string]interface{}{
+			"context": "ExportToCSV",
+			"headers": k.headers,
+			"error":   writerErr.Error(),
+		})
 		return
 	}
 
 	// Write rows
 	for _, row := range k.filteredRows {
 		if writerRowsErr := writer.Write(row); writerRowsErr != nil {
-			_ = logz.Log("error", "Error writing row to CSV: "+writerRowsErr.Error())
+			logz.Error("Error writing row to CSV.", map[string]interface{}{
+				"context": "ExportToCSV",
+				"row":     row,
+				"error":   writerRowsErr.Error(),
+			})
 			return
 		}
 	}
 
-	_ = logz.Log("info", "Data exported to CSV: "+filename)
+	logz.Info("Data exported to CSV.", map[string]interface{}{
+		"context":  "ExportToCSV",
+		"filename": filename,
+	})
 }
 
 func (k *TableRenderer) ExportToYAML(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		_ = logz.Log("error", "Error creating file: "+err.Error())
+		logz.Error("Error creating file,", map[string]interface{}{
+			"context":  "ExportToYAML",
+			"filename": filename,
+			"error":    err.Error(),
+		})
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	data := make([]map[string]string, len(k.filteredRows))
 	for i, row := range k.filteredRows {
@@ -328,23 +350,38 @@ func (k *TableRenderer) ExportToYAML(filename string) {
 	}
 
 	encoder := yaml.NewEncoder(file)
-	defer encoder.Close()
+	defer func(encoder *yaml.Encoder) {
+		_ = encoder.Close()
+	}(encoder)
 
 	if err := encoder.Encode(data); err != nil {
-		_ = logz.Log("error", "Error writing data to YAML: "+err.Error())
+		logz.Error("Error writing data to YAML.", map[string]interface{}{
+			"context": "ExportToYAML",
+			"data":    data,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	_ = logz.Log("info", "Data exported to YAML: "+filename)
+	logz.Info("Data exported to YAML.", map[string]interface{}{
+		"context":  "ExportToYAML",
+		"filename": filename,
+	})
 }
 
 func (k *TableRenderer) ExportToJSON(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		_ = logz.Log("error", "Error creating file: "+err.Error())
+		logz.Error("Error creating file.", map[string]interface{}{
+			"context":  "ExportToJSON",
+			"filename": filename,
+			"error":    err.Error(),
+		})
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	data := make([]map[string]string, len(k.filteredRows))
 	for i, row := range k.filteredRows {
@@ -357,20 +394,33 @@ func (k *TableRenderer) ExportToJSON(filename string) {
 
 	encoder := json.NewEncoder(file)
 	if err := encoder.Encode(data); err != nil {
-		_ = logz.Log("error", "Error writing data to JSON: "+err.Error())
+		logz.Error("Error writing data to JSON.", map[string]interface{}{
+			"context": "ExportToJSON",
+			"data":    data,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	_ = logz.Log("info", "Data exported to JSON: "+filename)
+	logz.Info("Data exported to JSON.", map[string]interface{}{
+		"context":  "ExportToJSON",
+		"filename": filename,
+	})
 }
 
 func (k *TableRenderer) ExportToXML(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		_ = logz.Log("error", "Error creating file: "+err.Error())
+		logz.Error("Error creating file.", map[string]interface{}{
+			"context":  "ExportToXML",
+			"filename": filename,
+			"error":    err.Error(),
+		})
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	data := make([]map[string]string, len(k.filteredRows))
 	for i, row := range k.filteredRows {
@@ -383,11 +433,18 @@ func (k *TableRenderer) ExportToXML(filename string) {
 
 	encoder := xml.NewEncoder(file)
 	if err := encoder.Encode(data); err != nil {
-		_ = logz.Log("error", "Error writing data to XML: "+err.Error())
+		logz.Error("Error writing data to XML.", map[string]interface{}{
+			"context": "ExportToXML",
+			"data":    data,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	_ = logz.Log("info", "Data exported to XML: "+filename)
+	logz.Info("Data exported to XML.", map[string]interface{}{
+		"context":  "ExportToXML",
+		"filename": filename,
+	})
 }
 
 func GetTableScreen(config FormConfig, customStyles map[string]lipgloss.Color) string {
@@ -400,7 +457,10 @@ func StartTableScreen(config FormConfig, customStyles map[string]lipgloss.Color)
 
 	p := tea.NewProgram(k, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
-		_ = logz.Log("error", "Error running table screen: "+err.Error())
+		logz.Error("Error running table screen: "+err.Error(), map[string]interface{}{
+			"context": "StartTableScreen",
+			"config":  config,
+		})
 		return nil
 	}
 	return nil

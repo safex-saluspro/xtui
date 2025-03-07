@@ -9,28 +9,32 @@ import (
 )
 
 func AppsCmdsList() []*cobra.Command {
-	instAppsCmd := InstallApplicationsCommand()
-
-	return []*cobra.Command{instAppsCmd}
+	return []*cobra.Command{
+		InstallApplicationsCommand(),
+	}
 }
 
 func InstallApplicationsCommand() *cobra.Command {
+	var depList []string
+	var path string
+	var yes, quiet bool
+
 	cmd := &cobra.Command{
 		Use:     "app-install",
 		Aliases: []string{"install", "appInstall", "installApp", "aptInstall", "apt-install", "depInstall", "dep-install"},
 		Short:   "Install applications and dependencies",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			depList, _ := cmd.Flags().GetStringArray("application")
-			path, _ := cmd.Flags().GetString("path")
-			yes, _ := cmd.Flags().GetBool("yes")
-			quiet, _ := cmd.Flags().GetBool("quiet")
 			if len(depList) == 0 && len(args) == 0 {
-				return logz.ErrorLog("Empty applications list", "ui")
+				logz.Error("Empty applications list", map[string]interface{}{
+					"context": "InstallApplicationsCommand",
+					"error":   "no applications to install",
+				})
+				return fmt.Errorf("no applications to install")
+
 			}
 			newArgs := []string{strings.Join(depList, " "), path, fmt.Sprintf("%t", yes), fmt.Sprintf("%t", quiet)}
 			args = append(args, newArgs...)
 
-			// Dynamic adaptation logic
 			availableProperties := getAvailableProperties()
 			if len(availableProperties) > 0 {
 				adaptedArgs := adaptArgsToProperties(args, availableProperties)
@@ -41,26 +45,22 @@ func InstallApplicationsCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringArrayP("application", "a", []string{}, "Applications list to install")
-	cmd.Flags().StringP("path", "p", "", "Apps installation path")
-	cmd.Flags().BoolP("yes", "y", false, "Automatic yes to prompts")
-	cmd.Flags().BoolP("quiet", "q", false, "Quiet mode")
+	cmd.Flags().StringArrayVarP(&depList, "application", "a", []string{}, "Applications list to install")
+	cmd.Flags().StringVarP(&path, "path", "p", "", "Apps installation path")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Automatic yes to prompts")
+	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "Quiet mode")
 
 	return cmd
 }
 
-// Helper function to get available properties
 func getAvailableProperties() map[string]string {
-	// Implement logic to fetch available properties
 	return map[string]string{
 		"property1": "value1",
 		"property2": "value2",
 	}
 }
 
-// Helper function to adapt arguments based on available properties
 func adaptArgsToProperties(args []string, properties map[string]string) []string {
-	// Implement logic to adapt arguments based on properties
 	adaptedArgs := args
 	for key, value := range properties {
 		adaptedArgs = append(adaptedArgs, fmt.Sprintf("--%s=%s", key, value))

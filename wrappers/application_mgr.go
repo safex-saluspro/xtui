@@ -7,11 +7,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/faelmori/logz"
+	"log"
 	"os/exec"
 	"strings"
 )
 
-type KbxDepsModel struct {
+type AppDepsModel struct {
 	apps     []string
 	path     string
 	yes      bool
@@ -25,12 +26,12 @@ type KbxDepsModel struct {
 }
 
 var (
-	kbxDepsCurrentPkgNameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("202"))
-	kbxDepsDoneStyle           = lipgloss.NewStyle()
-	kbxDepsCheckMark           = lipgloss.NewStyle().Foreground(lipgloss.Color("42")).SetString("✓")
+	appDepsCurrentPkgNameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("202"))
+	appDepsDoneStyle           = lipgloss.NewStyle()
+	appDepsCheckMark           = lipgloss.NewStyle().Foreground(lipgloss.Color("42")).SetString("✓")
 )
 
-func KbxDepsNewModel(apps []string, path string, yes bool, quiet bool) KbxDepsModel {
+func NewAppDepsModel(apps []string, path string, yes bool, quiet bool) AppDepsModel {
 	p := progress.New(
 		progress.WithScaledGradient("#F72100", "#F66600"),
 		progress.WithWidth(40),
@@ -38,7 +39,7 @@ func KbxDepsNewModel(apps []string, path string, yes bool, quiet bool) KbxDepsMo
 	)
 	s := spinner.New()
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("202"))
-	return KbxDepsModel{
+	return AppDepsModel{
 		apps:     apps,
 		path:     path,
 		yes:      yes,
@@ -48,11 +49,11 @@ func KbxDepsNewModel(apps []string, path string, yes bool, quiet bool) KbxDepsMo
 	}
 }
 
-func (m *KbxDepsModel) Init() tea.Cmd {
-	return tea.Batch(kbxDepsDownloadAndInstall(m.apps[m.index], m.path, m.yes, m.quiet))
+func (m *AppDepsModel) Init() tea.Cmd {
+	return tea.Batch(downloadAndInstall(m.apps[m.index], m.path, m.yes, m.quiet))
 }
 
-func (m *KbxDepsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *AppDepsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
@@ -61,7 +62,7 @@ func (m *KbxDepsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "esc", "q":
 			return m, tea.Quit
 		}
-	case kbxDepsInstalledPkgMsg:
+	case installedPkgMsg:
 		if m.index >= len(m.apps)-1 {
 			m.done = true
 			return m, tea.Quit
@@ -72,23 +73,23 @@ func (m *KbxDepsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, tea.Batch(
 			progressCmd,
-			kbxDepsDownloadAndInstall(m.apps[m.index], m.path, m.yes, m.quiet),
+			downloadAndInstall(m.apps[m.index], m.path, m.yes, m.quiet),
 		)
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
 	case progress.FrameMsg:
-		kbxDepsNewModel, cmd := m.progress.Update(msg)
-		if kbxDepsNewModel, ok := kbxDepsNewModel.(progress.Model); ok {
-			m.progress = kbxDepsNewModel
+		newModel, cmd := m.progress.Update(msg)
+		if newModel, ok := newModel.(progress.Model); ok {
+			m.progress = newModel
 		}
 		return m, cmd
 	}
 	return m, nil
 }
 
-func (m *KbxDepsModel) View() string {
+func (m *AppDepsModel) View() string {
 	n := len(m.apps)
 	w := lipgloss.Width(fmt.Sprintf("%d", n))
 
@@ -96,39 +97,42 @@ func (m *KbxDepsModel) View() string {
 
 	spin := m.spinner.View() + " "
 	prog := m.progress.View()
-	cellsAvail := kbxDepsMax(0, m.width-lipgloss.Width(spin+prog+depCount))
+	cellsAvail := appDepsMax(0, m.width-lipgloss.Width(spin+prog+depCount))
 
 	infoMsg := lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Installation progress: ")
 	info := lipgloss.NewStyle().MaxWidth(cellsAvail).Render("[pkgz] " + infoMsg + prog + depCount)
 
-	cellsRemaining := kbxDepsMax(0, m.width-lipgloss.Width(info+spin))
+	cellsRemaining := appDepsMax(0, m.width-lipgloss.Width(info+spin))
 	gap := strings.Repeat(" ", cellsRemaining)
 
 	if m.done {
 		depsQty := lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render(fmt.Sprintf("%d", n))
-		return info + gap + "\n" + m.renderInstalledApps() + kbxDepsDoneStyle.Render(fmt.Sprintf("[pkgz] Done! Installed %s applications.\n", depsQty))
+		return info + gap + "\n" + m.renderInstalledApps() + appDepsDoneStyle.Render(fmt.Sprintf("[pkgz] Done! Installed %s applications.\n", depsQty))
 	}
 
 	return info + gap + "\n" + m.renderInstalledApps()
 }
 
-func (m *KbxDepsModel) renderInstalledApps() string {
+func (m *AppDepsModel) renderInstalledApps() string {
 	var installedApps strings.Builder
 	for i := 0; i < m.index+1; i++ {
 		dep := m.apps[i]
-		depRendered := kbxDepsCurrentPkgNameStyle.Render(dep)
+		depRendered := appDepsCurrentPkgNameStyle.Render(dep)
 		infoBadge := lipgloss.NewStyle().Inline(true).Render("[pkgz] ")
 		infoMsg := lipgloss.NewStyle().Inline(true).Foreground(lipgloss.Color("6")).Render("Installed application: ")
-		installedApps.WriteString(fmt.Sprintf("%s%s%s %s\n", infoBadge, infoMsg, kbxDepsCheckMark, depRendered))
+		installedApps.WriteString(fmt.Sprintf("%s%s%s %s\n", infoBadge, infoMsg, appDepsCheckMark, depRendered))
 	}
 	return installedApps.String()
 }
 
-type kbxDepsInstalledPkgMsg string
+type installedPkgMsg string
 
-func kbxDepsDownloadAndInstall(dep string, path string, yes bool, quiet bool) tea.Cmd {
+func downloadAndInstall(dep string, path string, yes bool, quiet bool) tea.Cmd {
 	return func() tea.Msg {
-		_ = logz.InfoLog("Installing application: "+dep, "pkgz", "quiet")
+		logz.Info("Installing application: ", map[string]interface{}{
+			"context": "pkgz",
+			"app":     dep,
+		})
 		pkg := dep
 		if strings.Contains(dep, "/") {
 			pkg = strings.Split(dep, "/")[1]
@@ -147,69 +151,79 @@ func kbxDepsDownloadAndInstall(dep string, path string, yes bool, quiet bool) te
 		}
 		cmd := exec.Command("sudo", "apt-get", "install", pkg, pathFlag, yesFlag, quietFlag)
 		stdin := strings.NewReader("s\n")
-		cmd.Stdout = logz.Writer("pkgz")
+		cmd.Stdout = log.Writer()
 		cmd.Stdin = stdin
 		if err := cmd.Run(); err != nil {
-			_ = logz.Log("error", "error installing application: "+dep+" "+err.Error(), "pkgz")
+			logz.Error("error installing application.", map[string]interface{}{
+				"context": "pkgz",
+				"app":     dep,
+				"error":   err.Error(),
+			})
 			return tea.Quit()
 		}
-		_ = logz.InfoLog("Application installed: "+dep, "pkgz", "quiet")
-		return kbxDepsInstalledPkgMsg(dep)
+		logz.Info("Application installed.", map[string]interface{}{
+			"context": "pkgz",
+			"app":     dep,
+		})
+		return installedPkgMsg(dep)
 	}
 }
 
-func kbxDepsMax(a, b int) int {
+func appDepsMax(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-// InstallDependenciesWithUI installs dependencies in a terminal UI with a progress bar
 func InstallDependenciesWithUI(args ...string) error {
 	if len(args) < 4 {
-		_ = logz.Log("error", "missing arguments", "pkgz")
+		logz.Error("missing arguments", map[string]interface{}{
+			"context": "pkgz",
+			"error":   "missing arguments",
+		})
 		return nil
 	}
 	apps := strings.Split(args[0], " ")
 	if len(apps) == 0 {
-		_ = logz.Log("error", "no applications requested", "pkgz")
+		logz.Error("no applications requested", map[string]interface{}{
+			"context": "pkgz",
+			"error":   "no applications requested",
+		})
 		return nil
 	}
 	path := args[1]
 	yes := args[2] == "true"
 	quiet := args[3] == "true"
 
-	// Dynamic adaptation logic
 	availableProperties := getAvailableProperties()
 	if len(availableProperties) > 0 {
 		adaptedArgs := adaptArgsToProperties(args, availableProperties)
-		return installDependenciesWithUI(adaptedArgs...)
+		return InstallDependenciesWithUI(adaptedArgs...)
 	}
 
-	model := KbxDepsNewModel(apps, path, yes, quiet)
+	model := NewAppDepsModel(apps, path, yes, quiet)
 	p := tea.NewProgram(&model)
 	_, err := p.Run()
 	defer p.Quit()
 	if err != nil {
-		_ = logz.Log("error", "error running dependencies installation: "+err.Error(), "pkgz")
+		logz.Error("error running dependencies installation.", map[string]interface{}{
+			"context": "pkgz",
+			"error":   err.Error(),
+		})
 		return nil
 	}
 	return nil
 }
 
-// Helper function to get available properties
 func getAvailableProperties() map[string]string {
-	// Implement logic to fetch available properties
 	return map[string]string{
 		"property1": "value1",
 		"property2": "value2",
 	}
 }
 
-// Helper function to adapt arguments based on available properties
 func adaptArgsToProperties(args []string, properties map[string]string) []string {
-	// Implement logic to adapt arguments based on properties
 	adaptedArgs := args
 	for key, value := range properties {
 		adaptedArgs = append(adaptedArgs, fmt.Sprintf("--%s=%s", key, value))

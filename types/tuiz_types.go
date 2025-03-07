@@ -1,14 +1,16 @@
 package types
 
-const DOWN = "down"
-const TAB = "tab"
-const SHIFTTAB = "shift+tab"
-const ENTER = "enter"
-const UP = "up"
-const CTRLR = "ctrl+r"
-const CTRLC = "ctrl+c"
-const ESC = "esc"
-const PASSWORD = "password"
+const (
+	DOWN     = "down"
+	TAB      = "tab"
+	SHIFTTAB = "shift+tab"
+	ENTER    = "enter"
+	UP       = "up"
+	CTRLR    = "ctrl+r"
+	CTRLC    = "ctrl+c"
+	ESC      = "esc"
+	PASSWORD = "password"
+)
 
 type TableDataHandler interface {
 	GetHeaders() []string
@@ -31,11 +33,7 @@ type FormConfig struct {
 	Fields []Field
 }
 
-type TuizFieldz interface {
-	InputType() string
-	Inputs() []interface{}
-}
-type TuizInputz interface {
+type FormField interface {
 	Placeholder() string
 	Type() string
 	Value() string
@@ -45,12 +43,8 @@ type TuizInputz interface {
 	ErrorMessage() string
 	Validator() func(string) error
 }
-type TuizConfig interface {
-	Title() string
-	Fields() interface{}
-}
 
-type TuizInput struct {
+type InputField struct {
 	Ph  string
 	Tp  string
 	Val string
@@ -61,37 +55,36 @@ type TuizInput struct {
 	Vld func(string) error
 }
 
-func (f TuizInput) Placeholder() string           { return f.Ph }
-func (f TuizInput) Type() string                  { return f.Tp }
-func (f TuizInput) Value() string                 { return f.Val }
-func (f TuizInput) Required() bool                { return f.Req }
-func (f TuizInput) MinLength() int                { return f.Min }
-func (f TuizInput) MaxLength() int                { return f.Max }
-func (f TuizInput) ErrorMessage() string          { return f.Err }
-func (f TuizInput) Validator() func(string) error { return f.Vld }
+func (f InputField) Placeholder() string           { return f.Ph }
+func (f InputField) Type() string                  { return f.Tp }
+func (f InputField) Value() string                 { return f.Val }
+func (f InputField) Required() bool                { return f.Req }
+func (f InputField) MinLength() int                { return f.Min }
+func (f InputField) MaxLength() int                { return f.Max }
+func (f InputField) ErrorMessage() string          { return f.Err }
+func (f InputField) Validator() func(string) error { return f.Vld }
 
-type TuizFields struct {
-	Tt  string
-	Fds []TuizInputz
+// Collection of form fields
+type FormFields struct {
+	Title  string
+	Fields []FormField
 }
 
-func (f TuizFields) InputType() string {
-	return f.Tt
+func (f FormFields) InputType() string {
+	return f.Title
 }
-func (f TuizFields) Inputs() []interface{} {
-	var inputs []interface{}
-	for _, field := range f.Fds {
-		inputs = append(inputs, field)
-	}
-	return inputs
+func (f FormFields) Inputs() []FormField {
+	return f.Fields
 }
 
-type TuizConfigz struct {
-	Tt  string
-	Fds TuizFieldz
+type Config struct {
+	Title  string
+	Fields FormFields
 }
 
-func (c TuizConfigz) Title() string { return c.Tt }
-func (c TuizConfigz) Fields() interface{} {
-	return c.Fds
+func (c Config) GetTitle() string {
+	return c.Title
+}
+func (c Config) GetFields() FormFields {
+	return c.Fields
 }

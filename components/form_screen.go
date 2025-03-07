@@ -13,47 +13,47 @@ import (
 )
 
 var (
-	kbdzInputsFocusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
-	kbdzInputsBlurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	kbdzInputsCursorStyle         = kbdzInputsFocusedStyle
-	kbdzInputsNoStyle             = lipgloss.NewStyle()
-	kbdzInputsHelpStyle           = kbdzInputsBlurredStyle
-	kbdzInputsCursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
-	kbdzInputsErrorStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
+	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
+	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	cursorStyle         = focusedStyle
+	noStyle             = lipgloss.NewStyle()
+	helpStyle           = blurredStyle
+	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+	errorStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 
-	kbdzInputsFocusedButton = kbdzInputsFocusedStyle.Render("[ Proceed ]")
-	kbdzInputsBlurredButton = fmt.Sprintf("[ %s ]", kbdzInputsBlurredStyle.Render("Proceed"))
+	focusedButton = focusedStyle.Render("[ Proceed ]")
+	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Proceed"))
 )
 
 var inputResult map[string]string
 
-type FormScreenModel struct {
+type FormModel struct {
 	Title        string
 	FocusIndex   int
 	Inputs       []textinput.Model
 	CursorMode   cursor.Mode
-	Fields       []TuizInputz
+	Fields       []FormField
 	ErrorMessage string
 }
 
-func kbdzInputsInitialModel(config TuizConfigz) FormScreenModel {
-	cfg := config
-	var inputs []TuizInput
-	for _, field := range cfg.Fds.Inputs() {
-		inputs = append(inputs, field.(TuizInput))
+func initialFormModel(config Config) FormModel {
+	cfg := &config
+	var inputs []FormField
+
+	for _, field := range cfg.Fields.Inputs() {
+		inputs = append(inputs, field.(FormField))
 	}
 
-	// Dynamic adaptation logic
 	availableProperties := getAvailableProperties()
 	if len(availableProperties) > 0 {
 		inputs = adaptInputsToProperties(inputs, availableProperties)
 	}
 
-	m := FormScreenModel{
-		Title:        cfg.Title(),
+	m := FormModel{
+		Title:        cfg.Title,
 		FocusIndex:   0,
 		CursorMode:   cursor.CursorBlink,
-		Fields:       config.Fds.Inputs(),
+		Fields:       config.Fields.Inputs(),
 		Inputs:       make([]textinput.Model, len(inputs)),
 		ErrorMessage: "",
 	}
@@ -61,20 +61,20 @@ func kbdzInputsInitialModel(config TuizConfigz) FormScreenModel {
 	var t textinput.Model
 	for i, field := range inputs {
 		t = textinput.New()
-		t.Cursor.Style = kbdzInputsCursorStyle
+		t.Cursor.Style = cursorStyle
 		t.CharLimit = 32
 		t.Placeholder = field.Placeholder()
 		t.SetValue(field.Value())
 
-		if field.Tp == PASSWORD {
+		if field.Type() == PASSWORD {
 			t.EchoMode = textinput.EchoPassword
 			t.EchoCharacter = '•'
 		}
 
 		if i == 0 {
 			t.Focus()
-			t.PromptStyle = kbdzInputsFocusedStyle
-			t.TextStyle = kbdzInputsFocusedStyle
+			t.PromptStyle = focusedStyle
+			t.TextStyle = focusedStyle
 		}
 
 		m.Inputs[i] = t
@@ -83,17 +83,17 @@ func kbdzInputsInitialModel(config TuizConfigz) FormScreenModel {
 	return m
 }
 
-func (m *FormScreenModel) Init() tea.Cmd {
+func (m *FormModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *FormScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case CTRLC, ESC:
+		case "ctrl+c", "esc":
 			return m, tea.Quit
-		case CTRLR:
+		case "ctrl+r":
 			m.CursorMode++
 			if m.CursorMode > cursor.CursorHide {
 				m.CursorMode = cursor.CursorBlink
@@ -104,14 +104,14 @@ func (m *FormScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Batch(cmds...)
 
-		case TAB, SHIFTTAB, ENTER, UP, DOWN:
+		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
 
-			if s == ENTER && m.FocusIndex == len(m.Inputs) {
+			if s == "enter" && m.FocusIndex == len(m.Inputs) {
 				return m, m.submit()
 			}
 
-			if s == UP || s == SHIFTTAB {
+			if s == "up" || s == "shift+tab" {
 				m.FocusIndex--
 			} else {
 				m.FocusIndex++
@@ -127,13 +127,13 @@ func (m *FormScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := 0; i <= len(m.Inputs)-1; i++ {
 				if i == m.FocusIndex {
 					cmds[i] = m.Inputs[i].Focus()
-					m.Inputs[i].PromptStyle = kbdzInputsFocusedStyle
-					m.Inputs[i].TextStyle = kbdzInputsFocusedStyle
+					m.Inputs[i].PromptStyle = focusedStyle
+					m.Inputs[i].TextStyle = focusedStyle
 					continue
 				}
 				m.Inputs[i].Blur()
-				m.Inputs[i].PromptStyle = kbdzInputsNoStyle
-				m.Inputs[i].TextStyle = kbdzInputsNoStyle
+				m.Inputs[i].PromptStyle = noStyle
+				m.Inputs[i].TextStyle = noStyle
 			}
 
 			return m, tea.Batch(cmds...)
@@ -145,7 +145,7 @@ func (m *FormScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *FormScreenModel) View() string {
+func (m *FormModel) View() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("\n%s\n\n", m.Title))
@@ -157,25 +157,25 @@ func (m *FormScreenModel) View() string {
 		}
 	}
 
-	button := &kbdzInputsBlurredButton
+	button := &blurredButton
 	if m.FocusIndex == len(m.Inputs) {
-		button = &kbdzInputsFocusedButton
+		button = &focusedButton
 	}
 	_, _ = fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 
 	if m.ErrorMessage != "" {
-		b.WriteString(kbdzInputsErrorStyle.Render(m.ErrorMessage))
+		b.WriteString(errorStyle.Render(m.ErrorMessage))
 		b.WriteString("\n\n")
 	}
 
-	b.WriteString(kbdzInputsHelpStyle.Render("cursor mode is "))
-	b.WriteString(kbdzInputsCursorModeHelpStyle.Render(m.CursorMode.String()))
-	b.WriteString(kbdzInputsHelpStyle.Render(" (ctrl+r to change style)"))
+	b.WriteString(helpStyle.Render("cursor mode is "))
+	b.WriteString(cursorModeHelpStyle.Render(m.CursorMode.String()))
+	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
 
 	return b.String()
 }
 
-func (m *FormScreenModel) submit() tea.Cmd {
+func (m *FormModel) submit() tea.Cmd {
 	for i, input := range m.Inputs {
 		value := input.Value()
 		field := m.Fields[i]
@@ -206,30 +206,36 @@ func (m *FormScreenModel) submit() tea.Cmd {
 	return tea.Quit
 }
 
-func KbdzInputs(config TuizConfig) (map[string]string, error) {
+func ShowForm(config Config) (map[string]string, error) {
 	inputResult = make(map[string]string)
-	var newConfig TuizConfigz
-	var newFields = config.Fields()
+	var newConfig Config
+	var newFields = config.Fields.Inputs()
 	if newFields == nil {
-		newConfig = TuizConfigz{
-			Tt:  config.Title(),
-			Fds: nil,
+		iNewConfig := FormConfig{
+			Title:  config.Title,
+			Fields: nil,
 		}
-	} else {
-		newConfig = TuizConfigz{
-			Tt:  config.Title(),
-			Fds: newFields.(TuizFieldz),
+		newConfig = Config{
+			Title: iNewConfig.Title,
+			Fields: FormFields{
+				Title:  iNewConfig.Title,
+				Fields: config.GetFields().Inputs(),
+			},
 		}
 	}
-	initialModel := kbdzInputsInitialModel(newConfig)
+	initialModel := initialFormModel(newConfig)
 	_, resultModelErr := tea.NewProgram(&initialModel).Run()
 	if resultModelErr != nil {
-		return nil, logz.ErrorLog("Error running inputs model: "+resultModelErr.Error(), "ui")
+		logz.Error("Error running form model.", map[string]interface{}{
+			"context": "ShowForm",
+			"error":   resultModelErr,
+		})
+		return nil, resultModelErr
 	}
 	return inputResult, nil
 }
 
-func (m *FormScreenModel) updateInputs(msg tea.Msg) tea.Cmd {
+func (m *FormModel) updateInputs(msg tea.Msg) tea.Cmd {
 	cmds := make([]tea.Cmd, len(m.Inputs))
 
 	for i := range m.Inputs {
@@ -239,21 +245,17 @@ func (m *FormScreenModel) updateInputs(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// Helper function to get available properties
 func getAvailableProperties() map[string]string {
-	// Implement logic to fetch available properties
 	return map[string]string{
 		"property1": "value1",
 		"property2": "value2",
 	}
 }
 
-// Helper function to adapt inputs based on available properties
-func adaptInputsToProperties(inputs []TuizInput, properties map[string]string) []TuizInput {
-	// Implement logic to adapt inputs based on properties
+func adaptInputsToProperties(inputs []FormField, properties map[string]string) []FormField {
 	adaptedInputs := inputs
 	for key, value := range properties {
-		adaptedInputs = append(adaptedInputs, TuizInput{
+		adaptedInputs = append(adaptedInputs, InputField{
 			Ph:  key,
 			Tp:  "text",
 			Val: value,
