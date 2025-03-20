@@ -212,6 +212,12 @@ func (k *TableRenderer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			k.ExportToJSON("exported_data.json")
 		case "ctrl+x":
 			k.ExportToXML("exported_data.xml")
+		case "ctrl+l":
+			k.ExportToExcel("exported_data.xlsx")
+		case "ctrl+p":
+			k.ExportToPDF("exported_data.pdf")
+		case "ctrl+m":
+			k.ExportToMarkdown("exported_data.md")
 		default:
 			k.filter += message.String()
 		}
@@ -272,7 +278,10 @@ func (k *TableRenderer) View() string {
 		"  - ctrl+e: Exportar para CSV\n" +
 		"  - ctrl+y: Exportar para YAML\n" +
 		"  - ctrl+j: Exportar para JSON\n" +
-		"  - ctrl+x: Exportar para XML\n"
+		"  - ctrl+x: Exportar para XML\n" +
+		"  - ctrl+l: Exportar para Excel\n" +
+		"  - ctrl+p: Exportar para PDF\n" +
+		"  - ctrl+m: Exportar para Markdown\n"
 
 	toggleHelpText := "\nPressione ctrl+h para exibir/ocultar os atalhos."
 
@@ -445,6 +454,18 @@ func (k *TableRenderer) ExportToXML(filename string) {
 		"context":  "ExportToXML",
 		"filename": filename,
 	})
+}
+
+func (k *TableRenderer) ExportToExcel(filename string) {
+	// Implementation for exporting to Excel
+}
+
+func (k *TableRenderer) ExportToPDF(filename string) {
+	// Implementation for exporting to PDF
+}
+
+func (k *TableRenderer) ExportToMarkdown(filename string) {
+	// Implementation for exporting to Markdown
 }
 
 func GetTableScreen(config FormConfig, customStyles map[string]lipgloss.Color) string {
