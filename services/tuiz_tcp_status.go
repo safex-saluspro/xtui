@@ -1,7 +1,5 @@
 package services
 
-// A simple program that makes a GET request and prints the response status.
-
 import (
 	"fmt"
 	"net/http"

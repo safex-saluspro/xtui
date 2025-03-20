@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/faelmori/logz"
-
 	"os"
 	"os/exec"
 	"strconv"

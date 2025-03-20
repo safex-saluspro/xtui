@@ -88,3 +88,88 @@ func (c Config) GetTitle() string {
 func (c Config) GetFields() FormFields {
 	return c.Fields
 }
+
+// New interfaces and structs for customization options, validation, and layout
+
+type CustomizableField interface {
+	FormField
+	Label() string
+	DefaultValue() string
+	Group() string
+	LayoutOptions() LayoutOptions
+	Styles() Styles
+}
+
+type LayoutOptions struct {
+	Horizontal bool
+	Vertical   bool
+}
+
+type Styles struct {
+	FieldStyle    string
+	LabelStyle    string
+	ErrorStyle    string
+	TemplateStyle string
+}
+
+type CustomField struct {
+	InputField
+	Lbl  string
+	DVal string
+	Grp  string
+	Lay  LayoutOptions
+	Sty  Styles
+}
+
+func (f CustomField) Label() string                { return f.Lbl }
+func (f CustomField) DefaultValue() string         { return f.DVal }
+func (f CustomField) Group() string                { return f.Grp }
+func (f CustomField) LayoutOptions() LayoutOptions { return f.Lay }
+func (f CustomField) Styles() Styles               { return f.Sty }
+
+type Exporter interface {
+	ExportToCSV(filename string) error
+	ExportToYAML(filename string) error
+	ExportToJSON(filename string) error
+	ExportToXML(filename string) error
+	ExportToExcel(filename string) error
+	ExportToPDF(filename string) error
+	ExportToMarkdown(filename string) error
+}
+
+type DataExporter struct{}
+
+func (e DataExporter) ExportToCSV(filename string) error {
+	// Implementation for exporting to CSV
+	return nil
+}
+
+func (e DataExporter) ExportToYAML(filename string) error {
+	// Implementation for exporting to YAML
+	return nil
+}
+
+func (e DataExporter) ExportToJSON(filename string) error {
+	// Implementation for exporting to JSON
+	return nil
+}
+
+func (e DataExporter) ExportToXML(filename string) error {
+	// Implementation for exporting to XML
+	return nil
+}
+
+func (e DataExporter) ExportToExcel(filename string) error {
+	// Implementation for exporting to Excel
+	return nil
+}
+
+func (e DataExporter) ExportToPDF(filename string) error {
+	// Implementation for exporting to PDF
+	return nil
+}
+
+func (e DataExporter) ExportToMarkdown(filename string) error {
+	// Implementation for exporting to Markdown
+	return nil
+}

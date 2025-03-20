@@ -7,6 +7,7 @@ import (
 	"github.com/faelmori/xtui/types"
 	"github.com/faelmori/xtui/wrappers"
 	"github.com/spf13/cobra"
+	"testing"
 	"time"
 )
 
@@ -93,4 +94,32 @@ func LoaderFormCommand() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// Unit tests for InputFormCommand
+func TestInputFormCommand(t *testing.T) {
+	cmd := InputFormCommand()
+	if cmd.Use != "input-form" {
+		t.Errorf("expected 'input-form', got '%s'", cmd.Use)
+	}
+	if cmd.Short != "Form inputs for any command" {
+		t.Errorf("expected 'Form inputs for any command', got '%s'", cmd.Short)
+	}
+	if cmd.Long != "Form inputs screen, interactive mode, for any command with flags" {
+		t.Errorf("expected 'Form inputs screen, interactive mode, for any command with flags', got '%s'", cmd.Long)
+	}
+}
+
+// Unit tests for LoaderFormCommand
+func TestLoaderFormCommand(t *testing.T) {
+	cmd := LoaderFormCommand()
+	if cmd.Use != "loader-form" {
+		t.Errorf("expected 'loader-form', got '%s'", cmd.Use)
+	}
+	if cmd.Short != "Form loader for any command" {
+		t.Errorf("expected 'Form loader for any command', got '%s'", cmd.Short)
+	}
+	if cmd.Long != "Form loader screen, interactive mode, for any command with flags" {
+		t.Errorf("expected 'Form loader screen, interactive mode, for any command with flags', got '%s'", cmd.Long)
+	}
 }
