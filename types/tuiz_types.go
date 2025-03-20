@@ -55,6 +55,10 @@ type InputField struct {
 	Vld func(string) error
 }
 
+func (f InputField) ValidationRules() []ValidationRule {
+	return make([]ValidationRule, 0)
+}
+
 func (f InputField) Placeholder() string           { return f.Ph }
 func (f InputField) Type() string                  { return f.Tp }
 func (f InputField) Value() string                 { return f.Val }

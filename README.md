@@ -18,6 +18,8 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [CLI Examples](#cli-examples)
+- [Module Examples](#module-examples)
 - [Hotkeys](#hotkeys)
 - [Form Handling](#form-handling)
 - [Data Export](#data-export)
@@ -105,6 +107,67 @@ func main() {
         panic(err)
     }
     println("Form submitted:", result)
+}
+```
+
+## CLI Examples
+
+### Install Applications Command
+
+```sh
+go run main.go app-install --application app1 --application app2 --path /usr/local/bin --yes --quiet
+```
+
+### Table View Command
+
+```sh
+go run main.go table-view
+```
+
+### Input Form Command
+
+```sh
+go run main.go input-form
+```
+
+### Loader Form Command
+
+```sh
+go run main.go loader-form
+```
+
+## Module Examples
+
+### Log Viewer
+
+```go
+package main
+
+import (
+    "github.com/faelmori/xtui/wrappers"
+)
+
+func main() {
+    if err := wrappers.LogViewer(); err != nil {
+        panic(err)
+    }
+}
+```
+
+### Application Manager
+
+```go
+package main
+
+import (
+    "github.com/faelmori/xtui/wrappers"
+)
+
+func main() {
+    args := []string{"app1", "app2", "/usr/local/bin", "true", "true"}
+    if err := wrappers.InstallDependenciesWithUI(args...); err != nil {
+        panic(err)
+    }
 }
 ```
 

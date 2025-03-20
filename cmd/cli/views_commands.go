@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"github.com/charmbracelet/lipgloss"
 	"github.com/faelmori/xtui/components"
-	"github.com/faelmori/xtui/types"
+	t "github.com/faelmori/xtui/types"
 	"github.com/spf13/cobra"
+	"testing"
 )
 
 func ViewsCmdsList() []*cobra.Command {
@@ -21,15 +23,15 @@ func tableViewCmd() *cobra.Command {
 		Short:   "Table view for any command",
 		Long:    "Table view screen, interactive mode, for any command with flags",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := types.FormConfig{
+			config := t.FormConfig{
 				Title: "Sample Table",
-				Fields: []types.Field{
-					types.InputField{
+				Fields: []t.Field{
+					t.InputField{
 						Ph:  "Column1",
 						Tp:  "text",
 						Val: "Value1",
 					},
-					types.InputField{
+					t.InputField{
 						Ph:  "Column2",
 						Tp:  "text",
 						Val: "Value2",

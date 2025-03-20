@@ -10,7 +10,6 @@ import (
 	"log"
 	"os/exec"
 	"strings"
-	"github.com/faelmori/xtui/types"
 )
 
 type AppDepsModel struct {
