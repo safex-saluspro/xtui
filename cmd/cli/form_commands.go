@@ -32,8 +32,8 @@ func InputFormCommand() *cobra.Command {
 				Title: "Dynamic Form",
 				Fields: types.FormFields{
 					Title: "Login",
-					Fields: []types.FormField{
-						&types.InputField{
+					Fields: []types.FormInputObject[any]{
+						types.NewFormInputObject(&types.InputField{
 							Ph:  "Username",
 							Tp:  "text",
 							Val: "",
@@ -47,8 +47,9 @@ func InputFormCommand() *cobra.Command {
 								}
 								return nil
 							},
-						},
-						&types.InputField{
+							ValidationRulesVal: []types.ValidationRule{types.Required},
+						}),
+						types.NewFormInputObject(&types.InputField{
 							Ph:  "Password",
 							Tp:  "password",
 							Val: "",
@@ -62,7 +63,8 @@ func InputFormCommand() *cobra.Command {
 								}
 								return nil
 							},
-						},
+							ValidationRulesVal: []types.ValidationRule{types.Required},
+						}),
 					},
 				},
 			}

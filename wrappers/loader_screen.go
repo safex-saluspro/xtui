@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/faelmori/xtui/types"
 	"strings"
 )
 
@@ -30,7 +31,7 @@ type LoaderCloseMsg struct{}
 
 type loaderModel struct {
 	spinner  spinner.Model
-	messages []LoaderMsg
+	messages []types.LoaderMessage
 	quitting bool
 	err      error
 }
@@ -40,7 +41,7 @@ func newLoaderModel() loaderModel {
 	s.Style = loaderSpinnerStyle
 	return loaderModel{
 		spinner:  s,
-		messages: []LoaderMsg{},
+		messages: []types.LoaderMessage{},
 	}
 }
 
@@ -54,7 +55,7 @@ func (m loaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.quitting = true
 		return m, tea.Quit
 	case LoaderMsg:
-		m.messages = append(m.messages, msg)
+		m.messages = append(m.messages, types.LoaderMessage{Message: msg.Message})
 		return m, nil
 	case LoaderCloseMsg:
 		m.quitting = true

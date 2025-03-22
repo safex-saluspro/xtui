@@ -30,17 +30,17 @@ func tableViewCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := t.FormConfig{
 				Title: "Sample Table",
-				Fields: []t.Field{
-					t.InputField{
+				Fields: []t.FormInputObject[any]{
+					t.NewFormInputObject(&t.InputField{
 						Ph:  "Column1",
 						Tp:  "text",
 						Val: "Value1",
-					},
-					t.InputField{
+					}),
+					t.NewFormInputObject(&t.InputField{
 						Ph:  "Column2",
 						Tp:  "text",
 						Val: "Value2",
-					},
+					}),
 				},
 			}
 			customStyles := map[string]lipgloss.Color{
@@ -58,8 +58,8 @@ func tableViewCmd() *cobra.Command {
 
 func TestTableViewCmd(t *testing.T) {
 	cmd := tableViewCmd()
-	if cmd.Use != "table-view" {
-		t.Errorf("expected 'table-view', got '%s'", cmd.Use)
+	if cmd.Use != "table" {
+		t.Errorf("expected 'table', got '%s'", cmd.Use)
 	}
 	if cmd.Short != "Table view for any command" {
 		t.Errorf("expected 'Table view for any command', got '%s'", cmd.Short)
