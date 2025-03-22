@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/faelmori/logz"
+	"github.com/faelmori/xtui/types"
 	. "github.com/faelmori/xtui/wrappers"
 	"github.com/spf13/cobra"
 	"strings"

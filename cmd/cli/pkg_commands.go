@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faelmori/logz"
 	p "github.com/faelmori/xtui/packages"
+	"github.com/faelmori/xtui/types"
 	"github.com/spf13/cobra"
 	"os"
 	"reflect"
@@ -48,6 +49,12 @@ func appsCmdAdd() *cobra.Command {
 			quietFlagValue, _ := cmd.Flags().GetBool("quiet")
 			newArgs := []string{strings.Join(nameFlagValue, " "), pathFlagValue, fmt.Sprintf("%t", yesFlagValue), fmt.Sprintf("%t", quietFlagValue)}
 			args = append(args, newArgs...)
+
+			availableProperties := getAvailableProperties()
+			if len(availableProperties) > 0 {
+				adaptedArgs := adaptArgsToProperties(args, availableProperties)
+				return p.InstallApps(adaptedArgs...)
+			}
 
 			return p.InstallApps(args...)
 		},
@@ -125,6 +132,12 @@ func appsCmdList() *cobra.Command {
 			methodFlagValue, _ := cmd.Flags().GetString("method")
 			newArgs := []string{strings.Join(nameFlagValue, " "), statusFlagValue, methodFlagValue}
 			args = append(args, newArgs...)
+
+			availableProperties := getAvailableProperties()
+			if len(availableProperties) > 0 {
+				adaptedArgs := adaptArgsToProperties(args, availableProperties)
+				return p.ShowInstalledAppsTable(adaptedArgs...)
+			}
 
 			return p.ShowInstalledAppsTable(args...)
 		},
@@ -212,4 +225,19 @@ func InstallDepsHandler(args ...string) error {
 	}
 	scriptPath = args[0]
 	return p.InstallApps(scriptPath)
+}
+
+func getAvailableProperties() map[string]string {
+	return map[string]string{
+		"property1": "value1",
+		"property2": "value2",
+	}
+}
+
+func adaptArgsToProperties(args []string, properties map[string]string) []string {
+	adaptedArgs := args
+	for key, value := range properties {
+		adaptedArgs = append(adaptedArgs, fmt.Sprintf("--%s=%s", key, value))
+	}
+	return adaptedArgs
 }
