@@ -18,10 +18,15 @@ func ViewsCmdsList() []*cobra.Command {
 
 func tableViewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "table-view",
-		Aliases: []string{"table", "tableView", "table-view", "viewTable", "view-table"},
-		Short:   "Table view for any command",
-		Long:    "Table view screen, interactive mode, for any command with flags",
+		Use:     "table",
+		Aliases: []string{"tbl-view", "view-table"},
+		Annotations: GetDescriptions(
+			[]string{
+				"Table view for any command",
+				"Table view screen, interactive mode, for any command with flags",
+			},
+			false,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := t.FormConfig{
 				Title: "Sample Table",
@@ -51,7 +56,6 @@ func tableViewCmd() *cobra.Command {
 	return cmd
 }
 
-// Unit tests for tableViewCmd
 func TestTableViewCmd(t *testing.T) {
 	cmd := tableViewCmd()
 	if cmd.Use != "table-view" {

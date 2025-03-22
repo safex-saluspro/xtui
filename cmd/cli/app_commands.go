@@ -20,9 +20,14 @@ func InstallApplicationsCommand() *cobra.Command {
 	var yes, quiet bool
 
 	cmd := &cobra.Command{
-		Use:     "app-install",
-		Aliases: []string{"install", "appInstall", "installApp", "aptInstall", "apt-install", "depInstall", "dep-install"},
-		Short:   "Install applications and dependencies",
+		Use:     "install",
+		Aliases: []string{"i", "ins", "add"},
+		Annotations: GetDescriptions(
+			[]string{
+				"Install applications and dependencies",
+				"Install applications from a file or a repository and add, them to the system"},
+			false,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(depList) == 0 && len(args) == 0 {
 				logz.Error("Empty applications list", map[string]interface{}{

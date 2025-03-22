@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.4
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/faelmori/logz v1.0.10
+	github.com/fatih/color v1.18.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -27,6 +28,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

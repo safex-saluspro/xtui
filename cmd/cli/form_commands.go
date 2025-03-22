@@ -75,12 +75,25 @@ func InputFormCommand() *cobra.Command {
 }
 
 func LoaderFormCommand() *cobra.Command {
+	// Configuration file path. This file can be used to load dynamic properties.
+	var configFile string
+	// Loader settings and properties map. This map can be used to load dynamic properties.
+	// Example: {"Loading dynamic properties...": 2, "Dynamic properties loaded successfully.": 1, "Closing loader...": 1}
+	var sequenceWithDelay map[string]int
+	// Loader icon sequence map. This map can be used to load dynamic properties
+	// with sequenceWithDelay to set icons for each message in the loader.
+	var sequenceWithIcon map[string]string
+	// Loader color sequence map. This map can be used to load dynamic properties with other sequencies
+	// to set colors for each message in the loader.
+	var sequenceWithColor map[string]string
+
 	cmd := &cobra.Command{
 		Use:     "loader-form",
 		Aliases: []string{"loader", "formLoader", "loaderForm", "formLoader", "form-loader"},
 		Short:   "Form loader for any command",
 		Long:    "Form loader screen, interactive mode, for any command with flags",
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			messages := make(chan tea.Msg)
 			go func() {
 				messages <- wrappers.LoaderMsg{Message: "Loading dynamic properties..."}
@@ -92,6 +105,11 @@ func LoaderFormCommand() *cobra.Command {
 			return wrappers.StartLoader(messages)
 		},
 	}
+
+	cmd.Flags().StringToIntVarP(&sequenceWithDelay, "loader-delay", "l", nil, "Loader messages and delays")
+	cmd.Flags().StringToStringVarP(&sequenceWithIcon, "loader-icon", "i", nil, "Loader messages and icons")
+	cmd.Flags().StringToStringVarP(&sequenceWithColor, "loader-color", "r", nil, "Loader messages and colors")
+	cmd.Flags().StringVarP(&configFile, "loader-config", "L", "", "Loader configuration file for dynamic properties and settings")
 
 	return cmd
 }
