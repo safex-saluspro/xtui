@@ -230,3 +230,18 @@ func adaptArgsToProperties(args []string, properties map[string]string) []string
 	}
 	return adaptedArgs
 }
+
+func NavigateAndExecuteApplication(apps []string, path string, yes bool, quiet bool) error {
+	model := NewAppDepsModel(apps, path, yes, quiet)
+	p := tea.NewProgram(&model)
+	_, err := p.Run()
+	defer p.Quit()
+	if err != nil {
+		logz.Error("error running application navigation and execution.", map[string]interface{}{
+			"context": "NavigateAndExecuteApplication",
+			"error":   err.Error(),
+		})
+		return nil
+	}
+	return nil
+}

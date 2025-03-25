@@ -32,6 +32,7 @@ type TableRenderer struct {
 	search       string
 	selectedRow  int
 	showHelp     bool
+	visibleCols  map[string]bool
 }
 
 func NewTableRenderer(config FormConfig, customStyles map[string]lipgloss.Color) *TableRenderer {
@@ -108,6 +109,11 @@ func NewTableRenderer(config FormConfig, customStyles map[string]lipgloss.Color)
 		pageSizeLimit = 20
 	}
 
+	visibleCols := make(map[string]bool)
+	for _, header := range headers {
+		visibleCols[header] = true
+	}
+
 	return &TableRenderer{
 		config:       config,
 		kTb:          t,
@@ -121,6 +127,7 @@ func NewTableRenderer(config FormConfig, customStyles map[string]lipgloss.Color)
 		search:       "",
 		selectedRow:  -1,
 		showHelp:     false,
+		visibleCols:  visibleCols,
 	}
 }
 
@@ -218,6 +225,8 @@ func (k *TableRenderer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			k.ExportToPDF("exported_data.pdf")
 		case "ctrl+m":
 			k.ExportToMarkdown("exported_data.md")
+		case "ctrl+c":
+			k.ToggleColumnVisibility()
 		default:
 			k.filter += message.String()
 		}
@@ -281,7 +290,8 @@ func (k *TableRenderer) View() string {
 		"  - ctrl+x: Exportar para XML\n" +
 		"  - ctrl+l: Exportar para Excel\n" +
 		"  - ctrl+p: Exportar para PDF\n" +
-		"  - ctrl+m: Exportar para Markdown\n"
+		"  - ctrl+m: Exportar para Markdown\n" +
+		"  - ctrl+c: Alternar visibilidade das colunas\n"
 
 	toggleHelpText := "\nPressione ctrl+h para exibir/ocultar os atalhos."
 
@@ -468,6 +478,13 @@ func (k *TableRenderer) ExportToMarkdown(filename string) {
 	// Implementation for exporting to Markdown
 }
 
+func (k *TableRenderer) ToggleColumnVisibility() {
+	for header := range k.visibleCols {
+		k.visibleCols[header] = !k.visibleCols[header]
+	}
+	k.kTb = k.kTb.Rows(k.GetCurrentPageRows()...)
+}
+
 func GetTableScreen(config FormConfig, customStyles map[string]lipgloss.Color) string {
 	k := NewTableRenderer(config, customStyles)
 	return k.View()
@@ -480,6 +497,20 @@ func StartTableScreen(config FormConfig, customStyles map[string]lipgloss.Color)
 	if _, err := p.Run(); err != nil {
 		logz.Error("Error running table screen: "+err.Error(), map[string]interface{}{
 			"context": "StartTableScreen",
+			"config":  config,
+		})
+		return nil
+	}
+	return nil
+}
+
+func NavigateAndExecuteTable(config FormConfig, customStyles map[string]lipgloss.Color) error {
+	k := NewTableRenderer(config, customStyles)
+
+	p := tea.NewProgram(k, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		logz.Error("Error running table screen: "+err.Error(), map[string]interface{}{
+			"context": "NavigateAndExecuteTable",
 			"config":  config,
 		})
 		return nil
