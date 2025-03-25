@@ -32,16 +32,16 @@ type FormModel struct {
 	FocusIndex   int
 	Inputs       []textinput.Model
 	CursorMode   cursor.Mode
-	Fields       []FormField
+	Fields       []FormInputObject[any]
 	ErrorMessage string
 }
 
 func initialFormModel(config Config) FormModel {
 	cfg := &config
-	var inputs []FormField
+	var inputs []FormInputObject[any]
 
 	for _, field := range cfg.Fields.Inputs() {
-		inputs = append(inputs, field.(FormField))
+		inputs = append(inputs, field)
 	}
 
 	availableProperties := getAvailableProperties()
@@ -63,10 +63,10 @@ func initialFormModel(config Config) FormModel {
 		t = textinput.New()
 		t.Cursor.Style = cursorStyle
 		t.CharLimit = 32
-		t.Placeholder = field.Placeholder()
-		t.SetValue(field.Value())
+		t.Placeholder = field.(FormInput[any]).Placeholder()
+		t.SetValue(field.(FormInput[any]).String())
 
-		if field.Type() == PASSWORD {
+		if field.(FormInput[any]).GetType().String() == "password" {
 			t.EchoMode = textinput.EchoPassword
 			t.EchoCharacter = '•'
 		}
@@ -178,22 +178,22 @@ func (m *FormModel) View() string {
 func (m *FormModel) submit() tea.Cmd {
 	for i, input := range m.Inputs {
 		value := input.Value()
-		field := m.Fields[i]
+		field := m.Fields[i].(FormInput[any])
 
-		if field.Required() && value == "" {
-			m.ErrorMessage = field.ErrorMessage()
+		if field.IsRequired() && value == "" {
+			m.ErrorMessage = field.Error()
 			return nil
 		}
-		if field.MinLength() > 0 && len(value) < field.MinLength() {
-			m.ErrorMessage = field.ErrorMessage()
+		if field.MinValue() > 0 && len(value) < field.MinValue() {
+			m.ErrorMessage = field.Error()
 			return nil
 		}
-		if field.MaxLength() > 0 && len(value) > field.MaxLength() {
-			m.ErrorMessage = field.ErrorMessage()
+		if field.MaxValue() > 0 && len(value) > field.MaxValue() {
+			m.ErrorMessage = field.Error()
 			return nil
 		}
-		if field.Validator()(value) != nil {
-			if err := field.Validator()(value); err != nil {
+		if field.Validation()(value, nil) != nil {
+			if err := field.Validation()(value, nil); err != nil {
 				m.ErrorMessage = err.Error()
 				return nil
 			}
@@ -253,10 +253,10 @@ func getAvailableProperties() map[string]string {
 	}
 }
 
-func adaptInputsToProperties(inputs []FormField, properties map[string]string) []FormField {
+func adaptInputsToProperties(inputs []FormInputObject[any], properties map[string]string) []FormInputObject[any] {
 	adaptedInputs := inputs
 	for key, value := range properties {
-		adaptedInputs = append(adaptedInputs, InputField{
+		adaptedInputs = append(adaptedInputs, NewFormInputObject(&InputField{
 			Ph:  key,
 			Tp:  "text",
 			Val: value,
@@ -265,7 +265,7 @@ func adaptInputsToProperties(inputs []FormField, properties map[string]string) [
 			Max: 100,
 			Err: "",
 			Vld: func(value string) error { return nil },
-		})
+		}))
 	}
 	return adaptedInputs
 }
