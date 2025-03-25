@@ -203,6 +203,7 @@ func (m *FormModel) submit() tea.Cmd {
 	}
 
 	m.ErrorMessage = ""
+	DisplayNotification("Form submitted successfully", "info")
 	return tea.Quit
 }
 
@@ -267,4 +268,50 @@ func adaptInputsToProperties(inputs []FormInputObject[any], properties map[strin
 		}))
 	}
 	return adaptedInputs
+}
+
+func NavigateAndExecuteForm(config Config) (map[string]string, error) {
+	inputResult = make(map[string]string)
+	initialModel := initialFormModel(config)
+	_, resultModelErr := tea.NewProgram(&initialModel).Run()
+	if resultModelErr != nil {
+		logz.Error("Error running form model.", map[string]interface{}{
+			"context": "NavigateAndExecuteForm",
+			"error":   resultModelErr,
+		})
+		return nil, resultModelErr
+	}
+	DisplayNotification("Form submitted successfully", "info")
+	return inputResult, nil
+}
+
+func ShowFormWithNotification(config Config) (map[string]string, error) {
+	inputResult = make(map[string]string)
+	initialModel := initialFormModel(config)
+	_, resultModelErr := tea.NewProgram(&initialModel).Run()
+	if resultModelErr != nil {
+		logz.Error("Error running form model.", map[string]interface{}{
+			"context": "ShowFormWithNotification",
+			"error":   resultModelErr,
+		})
+		return nil, resultModelErr
+	}
+	// Display notification
+	DisplayNotification("Form submitted successfully", "info")
+	return inputResult, nil
+}
+
+func DisplayNotification(message, messageType string) {
+	// Implement the notification system logic here
+	// Use different styles and colors to differentiate between information, warnings, and errors
+	switch messageType {
+	case "info":
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#75FBAB")).Render(message))
+	case "warning":
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#FDFF90")).Render(message))
+	case "error":
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#FF7698")).Render(message))
+	default:
+		fmt.Println(message)
+	}
 }

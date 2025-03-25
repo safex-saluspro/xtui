@@ -7,6 +7,7 @@ import (
 	"github.com/faelmori/xtui/types"
 	"github.com/faelmori/xtui/wrappers"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"testing"
 	"time"
 )
@@ -28,48 +29,7 @@ func InputFormCommand() *cobra.Command {
 		Short:   "Form inputs for any command",
 		Long:    "Form inputs screen, interactive mode, for any command with flags",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := types.Config{
-				Title: "Dynamic Form",
-				Fields: types.FormFields{
-					Title: "Login",
-					Fields: []types.FormInputObject[any]{
-						types.NewFormInputObject(&types.InputField{
-							Ph:  "Username",
-							Tp:  "text",
-							Val: "",
-							Req: true,
-							Min: 3,
-							Max: 20,
-							Err: "Username is required and must be between 3 and 20 characters.",
-							Vld: func(value string) error {
-								if len(value) < 3 || len(value) > 20 {
-									return fmt.Errorf("username must be between 3 and 20 characters")
-								}
-								return nil
-							},
-							ValidationRulesVal: []types.ValidationRule{types.Required},
-						}),
-						types.NewFormInputObject(&types.InputField{
-							Ph:  "Password",
-							Tp:  "password",
-							Val: "",
-							Req: true,
-							Min: 6,
-							Max: 20,
-							Err: "Password is required and must be between 6 and 20 characters.",
-							Vld: func(value string) error {
-								if len(value) < 6 || len(value) > 20 {
-									return fmt.Errorf("password must be between 6 and 20 characters")
-								}
-								return nil
-							},
-							ValidationRulesVal: []types.ValidationRule{types.Required},
-						}),
-					},
-				},
-			}
-			_, err := components.ShowForm(config)
-			return err
+			return NavigateAndExecuteFormCommand(cmd, args)
 		},
 	}
 
@@ -141,5 +101,50 @@ func TestLoaderFormCommand(t *testing.T) {
 	}
 	if cmd.Long != "Form loader screen, interactive mode, for any command with flags" {
 		t.Errorf("expected 'Form loader screen, interactive mode, for any command with flags', got '%s'", cmd.Long)
+	}
+}
+
+func NavigateAndExecuteFormCommand(cmd *cobra.Command, args []string) error {
+	// Detect command and its flags
+	commandName := cmd.Name()
+	flags := cmd.Flags()
+
+	// Display command selection and flag definition in a form
+	formConfig := createFormConfig(commandName, flags)
+	formResult, err := components.ShowFormWithNotification(formConfig)
+	if err != nil {
+		return err
+	}
+
+	// Set flag values based on form input
+	for key, value := range formResult {
+		if err := cmd.Flags().Set(key, value); err != nil {
+			return err
+		}
+	}
+
+	// Execute the command
+	return cmd.Execute()
+}
+
+func createFormConfig(commandName string, flags *pflag.FlagSet) types.Config {
+	var formFields []types.FormField
+
+	flags.VisitAll(func(flag *pflag.Flag) {
+		formFields = append(formFields, &types.InputField{
+			Ph:  flag.Name,
+			Tp:  "text",
+			Val: flag.Value.String(),
+			Req: false,
+			Min: 0,
+			Max: 100,
+			Err: "",
+			Vld: func(value string) error { return nil },
+		})
+	})
+
+	return types.Config{
+		Title:  fmt.Sprintf("Configure %s Command", commandName),
+		Fields: types.FormFields{Fields: formFields},
 	}
 }

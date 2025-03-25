@@ -118,3 +118,19 @@ func StartLoader(messages chan tea.Msg) error {
 
 	return nil
 }
+
+func NavigateAndExecuteLoader(messages chan tea.Msg) error {
+	p := tea.NewProgram(newLoaderModel())
+
+	go func() {
+		for msg := range messages {
+			p.Send(msg)
+		}
+	}()
+
+	if _, err := p.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
