@@ -23,6 +23,8 @@
 - [Hotkeys](#hotkeys)
 - [Form Handling](#form-handling)
 - [Data Export](#data-export)
+- [Command Navigation Functionalities](#command-navigation-functionalities)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -107,6 +109,94 @@ func main() {
         panic(err)
     }
     println("Form submitted:", result)
+}
+```
+
+### Command Navigation Functionalities
+
+The `xtui` module provides several command navigation functionalities to enhance the user experience. These functionalities include `NavigateAndExecuteCommand`, `NavigateAndExecuteFormCommand`, and `NavigateAndExecuteViewCommand`.
+
+#### NavigateAndExecuteCommand
+
+The `NavigateAndExecuteCommand` function handles command navigation and execution. It detects commands and their flags, displays command selection and flag definition in a form, sets flag values based on form input, and executes the command.
+
+Example:
+
+```go
+package main
+
+import (
+    "github.com/faelmori/xtui/cmd/cli"
+    "github.com/spf13/cobra"
+)
+
+func main() {
+    cmd := &cobra.Command{
+        Use: "example-command",
+        RunE: func(cmd *cobra.Command, args []string) error {
+            return cli.NavigateAndExecuteCommand(cmd, args)
+        },
+    }
+
+    if err := cmd.Execute(); err != nil {
+        panic(err)
+    }
+}
+```
+
+#### NavigateAndExecuteFormCommand
+
+The `NavigateAndExecuteFormCommand` function handles form-based navigation and execution. It detects commands and their flags, displays command selection and flag definition in a form, sets flag values based on form input, and executes the command.
+
+Example:
+
+```go
+package main
+
+import (
+    "github.com/faelmori/xtui/cmd/cli"
+    "github.com/spf13/cobra"
+)
+
+func main() {
+    cmd := &cobra.Command{
+        Use: "example-form-command",
+        RunE: func(cmd *cobra.Command, args []string) error {
+            return cli.NavigateAndExecuteFormCommand(cmd, args)
+        },
+    }
+
+    if err := cmd.Execute(); err != nil {
+        panic(err)
+    }
+}
+```
+
+#### NavigateAndExecuteViewCommand
+
+The `NavigateAndExecuteViewCommand` function handles table-based navigation and execution. It detects commands and their flags, displays command selection and flag definition in a table view, sets flag values based on table input, and executes the command.
+
+Example:
+
+```go
+package main
+
+import (
+    "github.com/faelmori/xtui/cmd/cli"
+    "github.com/spf13/cobra"
+)
+
+func main() {
+    cmd := &cobra.Command{
+        Use: "example-view-command",
+        RunE: func(cmd *cobra.Command, args []string) error {
+            return cli.NavigateAndExecuteViewCommand(cmd, args)
+        },
+    }
+
+    if err := cmd.Execute(); err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -219,6 +309,16 @@ field := types.InputField{
 ### Example
 
 To export data to a file, simply use the respective hotkey (e.g., `Ctrl+E` for CSV). Files will be saved with predefined names, such as `exported_data.csv`.
+
+## Testing
+
+To test the new navigation functionalities in the `xtui` module, you can follow these steps:
+
+* Run the unit tests provided in the repository. For example, you can run the tests in `cmd/cli/form_commands.go` and `cmd/cli/views_commands.go` using the `go test` command.
+* Use the `NavigateAndExecuteCommand` function in `cmd/cli/app_commands.go` to test command navigation and execution. You can create a new command and call this function with the command and arguments.
+* Test the form-based navigation by running the `input-form` command defined in `cmd/cli/form_commands.go`. This command uses the `NavigateAndExecuteFormCommand` function to handle form inputs and execute the command.
+* Test the table-based navigation by running the `table-view` command defined in `cmd/cli/views_commands.go`. This command uses the `NavigateAndExecuteViewCommand` function to handle table views and execute the command.
+* Test the loader-based navigation by running the `loader-form` command defined in `cmd/cli/form_commands.go`. This command uses the `wrappers.StartLoader` function to display a loader screen and execute the command.
 
 ## Contributing
 

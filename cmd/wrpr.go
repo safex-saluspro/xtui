@@ -84,6 +84,8 @@ func (m *XTui) Command() *cobra.Command {
 				return InstallDependenciesWithUI(opts...)
 			case "tcp-status":
 				return TcpStatus(args...)
+			case "navigate":
+				return NavigateAndExecuteCommand(cmd, args)
 			}
 
 			return fmt.Errorf("error: %s", opts[0])
